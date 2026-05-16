@@ -1,10 +1,63 @@
 ---
 description: >
-  Backend that records user locations while commuting between home and work,
-  stores them in a database, and determines whether two users' commutes intersect.
+  Backend that records user commute locations, stores them in a database,
+  and determines whether two users' commutes intersect.
 ---
 
 ***definitions***
 
+- :UserId: is a unique string identifier.
+- :User: is a person who commutes between home and work, identified by a :UserId:.
+- :Location: is a geographic coordinate with latitude and longitude.
+- :RawPoint: is a raw location data point ingested from the datafile.
+  - Has latitude and longitude.
+  - Has a recorded-at timestamp.
+- :CommuteRecord: is a processed location point stored during a :User:'s commute.
+  - Has a recorded-at timestamp.
+  - Has an H3 :CellId: derived from the raw latitude and longitude.
+- :CellId: is an H3 geospatial hash cell identifier computed from :Location: coordinates.
+- :Commute: is a set of :CommuteRecord: points for a :User: traveling between home and work.
+- :Intersection: is a query result indicating when two :User:'s :Commute: paths share one or more :CellId: values. Not a stored entity — computed ad-hoc.
+
+***implementation reqs***
+
+- :Implementation: should generate unit tests using pytest framework.
+- :Implementation: should be in Python.
+- :Implementation: should use aiohttp for the HTTP server.
+- :Implementation: should use procedural (not OOP) style — functions and modules, no classes.
+- :Implementation: should use asyncpg to connect to PostgreSQL and run raw SQL queries.
+- :Implementation: should use the h3-py library for H3 geohashing.
+- Database: PostgreSQL.
+- :Implementation: should be a single .py file.
+- H3 resolution should be a configurable constant at the top of the file.
+- Server port should be configurable via a constant at the top of the file.
+- Database connection URL: postgresql://postgres:postgres@localhost:5432/postgres-h3-db.
+- :CellId: should be stored as an H3 index using the h3index type provided by the PostgreSQL H3 extension.
+- The database already has the H3 extension installed.
+- The entry point must create the DB pool, initialize tables, and start the HTTP server all within a single asyncio event loop. Use `web.run_app(app_factory_coroutine, port=...)` so the pool and server share the same loop.
+
 ***functional specs***
 
+- Set up database tables for :User: and :CommuteRecord:.
+  - :User: table has user_id (primary key).
+  - :CommuteRecord: table has id (primary key), user_id (foreign key to :User:), cell_id (array of 64-bit integers), recorded_at.
+
+- Provide an API endpoint to ingest a raw commute location point as JSON.
+  - Endpoint: POST /commutes/ingest
+  - Request body format: {"user_id": "<id>", "latitude": 12.34, "longitude": 56.78, "timestamp": "<ISO-8601>"}.
+  - user_id must be a non-empty string.
+  - Timestamp must be in ISO 8601 format.
+  - Latitude must be between -90 and 90, longitude between -180 and 180.
+  - Compute the H3 :CellId: from the latitude and longitude.
+  - Store the result as a :CommuteRecord: with the computed :CellId: and the request's timestamp.
+  - If a :User: with the given user_id does not exist, create it.
+  - Return HTTP 201 with the created :CommuteRecord: id.
+  - Return HTTP 400 for invalid input (validation failures, missing fields, malformed data).
+
+- Provide an API endpoint to find intersecting cells between two :User:'s commutes.
+  - Endpoint: POST /commutes/intersections
+  - Request body: {"user_id_a": "...", "user_id_b": "..."}
+  - Query :CommuteRecord: to find all :CellId: values shared by the two users.
+  - Return HTTP 200 with {"shared_cells": [<64-bit ints>]}, listing every :CellId: both users passed through.
+  - If they share no cells, return {"shared_cells": []}.
+  - Return HTTP 404 if either user_id does not exist.
