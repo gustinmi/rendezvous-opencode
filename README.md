@@ -87,3 +87,17 @@ Connection URL and H3 resolution are configurable constants at the top of `app.p
 ```bash
 ./test_scripts/run_unittests_python.sh commute-backend
 ```
+
+## Docker
+
+### Start
+
+```bash
+docker-compose up -d
+```
+
+### Stop
+
+```bash
+docker-compose down
+```

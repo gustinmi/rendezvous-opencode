@@ -29,18 +29,22 @@ description: >
 - :Implementation: should use aiohttp for the HTTP server.
 - :Implementation: should use procedural (not OOP) style — functions and modules, no classes.
 - :Implementation: should use asyncpg to connect to PostgreSQL and run raw SQL queries.
-- :Implementation: should use the h3-py library for H3 geohashing.
+- :Implementation: should use the h3-py library for H3 geohashing. Use `h3.latlng_to_cell(lat, lng, resolution)` to convert coordinates to H3 cells (h3 v4 API).
 - Database: PostgreSQL.
 - :Implementation: should be a single .py file.
 - H3 resolution should be a configurable constant at the top of the file.
 - Server port should be configurable via a constant at the top of the file.
 - Database connection URL: postgresql://postgres:postgres@localhost:5432/postgres-h3-db.
 - :CellId: should be stored as an H3 index using the h3index type provided by the PostgreSQL H3 extension.
-- The database already has the H3 extension installed.
+- The database already has the H3 extension installed. The init_db function should still run `CREATE EXTENSION IF NOT EXISTS h3 CASCADE;` to ensure the type is available in the search path before creating tables.
 - When inserting a :CommuteRecord:, wrap the H3 :CellId: in a PostgreSQL array literal (e.g. `ARRAY[$1::h3index]`) so the value matches the `h3index[]` column type.
 - When querying intersections, use `unnest()` on the `cell_id` array to find shared cells between two users (e.g. `SELECT unnest(cell_id) FROM commute_records WHERE user_id = $1 INTERSECT SELECT unnest(cell_id) FROM commute_records WHERE user_id = $2`).
 - The entry point must create the DB pool, initialize tables, and start the HTTP server all within a single asyncio event loop. Use `web.run_app(app_factory_coroutine, port=...)` so the pool and server share the same loop.
+- If database initialization (pool creation or table creation) fails, the server must not start — the startup must propagate the error and exit.
 - :IndexHtmlPath: should be a configurable constant at the top of the file.
+- During startup, log whether the tables were created or already existed (e.g. "Created tables users, commute_records" or "Tables already exist").
+- When a commute record is saved successfully via POST /commutes/ingest, log the user_id and record id (e.g. "Saved commute record 42 for user 1234").
+- Use Python's print() for logging.
 
 ***functional specs***
 
