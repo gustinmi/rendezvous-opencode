@@ -1,0 +1,38 @@
+---
+description: >
+  Web frontend for the commute tracker. Displays an interactive OpenStreetMap
+  powered by Leaflet and logs clicked coordinates to the console.
+  The backend API contract is defined in ../resources/openapi.yaml.
+---
+
+***definitions***
+
+- :CommuteTrackerAPI: is the backend API contract defined in [../resources/openapi.yaml](../resources/openapi.yaml).
+- :CommuteMap: is an interactive map displayed in the browser using Leaflet and OpenStreetMap tiles.
+- :ClickCoordinates: are the latitude and longitude of a point the user clicked on :CommuteMap:.
+- :BackendUrl: is the base URL of the commute tracker backend API, default `http://localhost:8080`.
+- :UserIdParam: is the `user_id` query string parameter read from the page URL.
+
+***implementation reqs***
+
+- :Implementation: should be a single static HTML file with embedded CSS and JavaScript.
+- :Implementation: should load Leaflet CSS and JS from CDN.
+- :Implementation: should use OpenStreetMap tile layer for the map.
+- :Implementation: should not require a web server — the HTML file opens directly in a browser.
+- :BackendUrl: should be a configurable constant in the JavaScript, default `http://localhost:8080`.
+- :Implementation: should use the Fetch API for HTTP calls to :BackendUrl:.
+
+***functional specs***
+
+- Display a :CommuteMap: on a web page using Leaflet.
+  - :CommuteMap: should be centered on latitude 46.05, longitude 14.50 (Ljubljana area).
+  - :CommuteMap: should fill the full browser viewport.
+  - :CommuteMap: should include zoom controls.
+  - The web page title should be "Commute Tracker".
+- When the user clicks on :CommuteMap:, save :ClickCoordinates: to the backend via :CommuteTrackerAPI:.
+  - Read user_id from :UserIdParam: in the page URL (`?user_id=...`). If missing, log a warning and skip the API call.
+  - Send a POST request to `{BackendUrl}/commutes/ingest` with JSON body: `{"user_id": "<id>", "latitude": <lat>, "longitude": <lng>, "timestamp": "<ISO-8601-now>"}`.
+  - The timestamp should be the current time in ISO 8601 format.
+  - On success (HTTP 201), log `"Saved: <lat>, <lng>"` to the console.
+  - On failure, log the error to the console with `console.error`.
+  - Also log the raw :ClickCoordinates: to the console as before with 6 decimal places.

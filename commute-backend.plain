@@ -18,6 +18,8 @@ description: >
 - :CellId: is an H3 geospatial hash cell identifier computed from :Location: coordinates.
 - :Commute: is a set of :CommuteRecord: points for a :User: traveling between home and work.
 - :Intersection: is a query result indicating when two :User:'s :Commute: paths share one or more :CellId: values. Not a stored entity — computed ad-hoc.
+- :IndexHtmlPath: is the filesystem path to the frontend HTML file. Default value is `../frontend/dist/index.html`.
+- :IndexPage: is the frontend web page served at the root URL.
 
 ***implementation reqs***
 
@@ -34,7 +36,10 @@ description: >
 - Database connection URL: postgresql://postgres:postgres@localhost:5432/postgres-h3-db.
 - :CellId: should be stored as an H3 index using the h3index type provided by the PostgreSQL H3 extension.
 - The database already has the H3 extension installed.
+- When inserting a :CommuteRecord:, wrap the H3 :CellId: in a PostgreSQL array literal (e.g. `ARRAY[$1::h3index]`) so the value matches the `h3index[]` column type.
+- When querying intersections, use `unnest()` on the `cell_id` array to find shared cells between two users (e.g. `SELECT unnest(cell_id) FROM commute_records WHERE user_id = $1 INTERSECT SELECT unnest(cell_id) FROM commute_records WHERE user_id = $2`).
 - The entry point must create the DB pool, initialize tables, and start the HTTP server all within a single asyncio event loop. Use `web.run_app(app_factory_coroutine, port=...)` so the pool and server share the same loop.
+- :IndexHtmlPath: should be a configurable constant at the top of the file.
 
 ***functional specs***
 
@@ -61,3 +66,7 @@ description: >
   - Return HTTP 200 with {"shared_cells": [<64-bit ints>]}, listing every :CellId: both users passed through.
   - If they share no cells, return {"shared_cells": []}.
   - Return HTTP 404 if either user_id does not exist.
+
+- Serve the :IndexPage: at the root URL.
+  - When a GET request is made to `/`, the server reads the file at :IndexHtmlPath: and responds with its content as `text/html`.
+  - If :IndexHtmlPath: does not exist or cannot be read, return HTTP 500 with an error message describing the problem.
