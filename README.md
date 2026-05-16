@@ -70,6 +70,11 @@ Returns `{"shared_cells": [...]}` with the H3 cells both users share, or `{"shar
 Navigate to [http://localhost:8080/?user_id=1234](http://localhost:8080/?user_id=1234)
 Change user_id for simulating multiple users.
 
+![Simulation tool](image.png)
+
+
+
+
 ## Database
 
 The app connects to `postgresql://postgres:postgres@localhost:5432/postgres-h3-db`.
