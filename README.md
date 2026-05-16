@@ -1,6 +1,12 @@
 # Commute Tracker
 
-Backend that records user commute locations, stores them in a database, and determines whether two users' commutes intersect.
+Rendezvous Service will facilitate easy meetups on crossings of our daily commute paths.
+Service records locations and proposes rendezvous points to users with similar commutes or commutes crossings. This service should facilitate p2p exchange of goods, books, services and would encourage reuse instead of purchasing new stuff. 
+
+Modules:
+
+- Backend that records user commute locations, stores them in a database, and determines whether two users' commutes intersect.
+- Simulation Frontend where clicks on openstreet map record location into database.
 
 ## Prerequisites
 
@@ -58,6 +64,11 @@ curl -X POST http://localhost:8080/commutes/intersections \
 ```
 
 Returns `{"shared_cells": [...]}` with the H3 cells both users share, or `{"shared_cells": []}` if they never crossed paths.
+
+### Simulation tool in browser for recording locations
+
+Navigate to [http://localhost:8080/?user_id=1234](http://localhost:8080/?user_id=1234)
+Change user_id for simulating multiple users.
 
 ## Database
 
