@@ -19,6 +19,7 @@ description: >
 - :Commute: is a set of :CommuteRecord: points for a :User: traveling between home and work.
 - :Intersection: is a query result indicating when two :User:'s :Commute: paths share one or more :CellId: values. Not a stored entity — computed ad-hoc.
 - :IndexHtmlPath: is the filesystem path to the frontend HTML file. Default value is `../frontend/dist/index.html`.
+- :DockerSetup: is the Docker deployment configuration, defined in [Dockerfile](Dockerfile) and [docker-compose.yml](docker-compose.yml).
 - :IndexPage: is the frontend web page served at the root URL.
 
 ***implementation reqs***
