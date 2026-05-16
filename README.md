@@ -36,7 +36,7 @@ cd ../..
 
 ```bash
 cd plain_modules/commute-backend
-python app.py
+python commute_backend.py
 ```
 
 The server starts on the port configured at the top of `app.py` (default `8080`).
